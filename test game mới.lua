@@ -42,7 +42,7 @@ local function BugSize()
         if _G.sizeBugEnabled then
             for _, part in pairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    part.Size = part.Size * 2  -- Phóng to mỗi phần cơ thể
+                    part.Size = part.Size * 100  -- Phóng to mỗi phần cơ thể
                 end
             end
         end
