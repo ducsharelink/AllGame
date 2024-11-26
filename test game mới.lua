@@ -23,100 +23,13 @@ local Notify = DeltaLib:Notify({
 	["Delay"] = 10
 })
 
-local MainTab = DeltaGui:MakeTab("Misc")  -- Đổi tên từ "Test chức năng" thành "Misc"
+local MainTab = DeltaGui:MakeTab("Misc")
 
 -- Biến trạng thái toàn cục
-_G.pushUpEnabled = false
-_G.invincibleEnabled = false
 _G.autoClickEnabled = false
+_G.flyEnabled = false
 _G.noclipEnabled = false
-_G.safeMoveEnabled = false  -- Trạng thái di chuyển vòng tròn an toàn
-_G.invisibleEnabled = false  -- Trạng thái tàng hình
-_G.teleportEnabled = false  -- Trạng thái dịch chuyển lên cao
-
--- Hàm bật bất tử
-local function BecomeInvincible()
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-
-    -- Ngừng nhận sát thương và luôn khôi phục máu
-    while true do
-        if _G.invincibleEnabled then
-            local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-            if humanoid then
-                humanoid.Health = humanoid.MaxHealth  -- Khôi phục máu về tối đa
-                humanoid.HealthChanged:Connect(function() 
-                    humanoid.Health = humanoid.MaxHealth  -- Nếu có thay đổi máu, luôn khôi phục về tối đa
-                end)
-            end
-        end
-        wait(0.1)  -- Kiểm tra liên tục để tránh sát thương
-    end
-end
-
--- Hàm bật tàng hình
-local function BecomeInvisible()
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-
-    -- Làm nhân vật tàng hình và tắt các phần hình ảnh
-    while true do
-        if _G.invisibleEnabled then
-            character:FindFirstChild("Head"):Destroy()  -- Ẩn đầu nhân vật
-            for _, part in pairs(character:GetChildren()) do
-                if part:IsA("MeshPart") or part:IsA("Part") then
-                    part.Transparency = 1  -- Tạo tàng hình
-                    part.CanCollide = false  -- Tắt va chạm
-                end
-            end
-        else
-            -- Khi tắt tàng hình, phục hồi lại tất cả các phần cơ thể
-            for _, part in pairs(character:GetChildren()) do
-                if part:IsA("MeshPart") or part:IsA("Part") then
-                    part.Transparency = 0  -- Phục hồi độ trong suốt
-                    part.CanCollide = true  -- Bật va chạm
-                end
-            end
-        end
-        wait(0.1)  -- Kiểm tra liên tục
-    end
-end
-
--- Hàm dịch chuyển lên cao (vị trí tít cao giữa map)
-local function TeleportToSky()
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    
-    while true do
-        if _G.teleportEnabled then
-            -- Dịch chuyển lên một vị trí tít cao
-            local targetPosition = Vector3.new(0, 500, 0)  -- Dịch chuyển lên vị trí X=0, Y=500, Z=0
-            character:SetPrimaryPartCFrame(CFrame.new(targetPosition))  -- Thực hiện dịch chuyển
-        end
-        wait(0.5)  -- Kiểm tra mỗi 0.5 giây
-    end
-end
-
--- Hàm di chuyển vòng tròn (An toàn)
-local function SafeMoveInCircle()
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    local radius = 10  -- Bán kính của vòng tròn di chuyển
-    local speed = 10  -- Tốc độ di chuyển
-    local angle = 0
-
-    -- Di chuyển vòng tròn
-    while true do
-        if _G.safeMoveEnabled then
-            angle = angle + speed  -- Tăng góc quay
-            local x = radius * math.cos(math.rad(angle))  -- Tính toán tọa độ X
-            local z = radius * math.sin(math.rad(angle))  -- Tính toán tọa độ Z
-            humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position.X + x, humanoidRootPart.Position.Y, humanoidRootPart.Position.Z + z)
-        end
-        wait(0.1)  -- Cập nhật mỗi 0.1 giây
-    end
-end
+_G.espEnabled = false
 
 -- Hàm Auto Click
 local function AutoClick()
@@ -126,15 +39,91 @@ local function AutoClick()
     end
 end
 
--- Tạo mục "Misc" với các chức năng Fast PushUp, Invincible, Auto Click, Noclip, Safe Move và Invisible
+-- Hàm Di chuyển Đứng Im Trên Không (Fly)
+local function Fly()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    while true do
+        if _G.flyEnabled then
+            humanoidRootPart.CFrame = humanoidRootPart.CFrame + Vector3.new(0, 1, 0)  -- Giữ cho nhân vật đứng trên không
+        end
+        wait(0.1)  -- Kiểm tra mỗi 0.1 giây
+    end
+end
+
+-- Hàm Xuyên Tường (NoClip)
+local function NoClip()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+
+    -- Mở chế độ không va chạm (no-clip)
+    while true do
+        if _G.noclipEnabled then
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false  -- Tắt va chạm với vật thể
+                end
+            end
+        else
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true  -- Bật va chạm lại khi tắt NoClip
+                end
+            end
+        end
+        wait(0.1)  -- Kiểm tra mỗi 0.1 giây
+    end
+end
+
+-- Hàm ESP (Hiển thị vị trí của tất cả người chơi)
+local function ESP()
+    local players = game:GetService("Players")
+
+    -- Dùng GUI để hiển thị tên người chơi và vị trí của họ
+    local function DrawESP(player)
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = player.Character.HumanoidRootPart
+            local screenPos, onScreen = game:GetService("Workspace").CurrentCamera:WorldToScreenPoint(rootPart.Position)
+            
+            if onScreen then
+                local label = Instance.new("TextLabel")
+                label.Size = UDim2.new(0, 200, 0, 50)
+                label.Position = UDim2.new(0, screenPos.X, 0, screenPos.Y)
+                label.BackgroundTransparency = 1
+                label.TextColor3 = Color3.fromRGB(255, 255, 255)
+                label.Text = player.Name
+                label.TextSize = 14
+                label.Parent = game.Players.LocalPlayer.PlayerGui
+                wait(1)
+                label:Destroy()
+            end
+        end
+    end
+
+    -- Vẽ ESP cho tất cả các người chơi trong game
+    while true do
+        if _G.espEnabled then
+            for _, player in pairs(players:GetPlayers()) do
+                if player ~= players.LocalPlayer then
+                    DrawESP(player)
+                end
+            end
+        end
+        wait(0.1)
+    end
+end
+
+-- Tạo mục "Misc" với các chức năng Auto Click, Fly, NoClip, ESP
 local Section = MainTab:Section({
     ["Title"] = "Misc",
-    ["Content"] = "Chức năng an toàn, bất tử, auto click, xuyên tường, và tàng hình"
+    ["Content"] = "Chức năng Auto Click, Fly, NoClip và ESP"
 })
 
 -- Nút bật/tắt Auto Click
 Section:Toggle({
-    ["Title"] = "Auto Click Siêu Nhanh",
+    ["Title"] = "Auto Click",
     ["Default"] = false,
     ["Callback"] = function(state)
         _G.autoClickEnabled = state  -- Bật/tắt Auto Click
@@ -147,64 +136,55 @@ Section:Toggle({
     end
 })
 
--- Nút bật/tắt Bất Tử
+-- Nút bật/tắt Fly (Đứng Im Trên Không)
 Section:Toggle({
-    ["Title"] = "Bật/Tắt Bất Tử",
+    ["Title"] = "Fly (Đứng Im Trên Không)",
     ["Default"] = false,
     ["Callback"] = function(state)
-        _G.invincibleEnabled = state  -- Bật/tắt Bất Tử
+        _G.flyEnabled = state  -- Bật/tắt Fly
         if state then
-            print("Invincible ON")
+            print("Fly ON")
+            coroutine.wrap(Fly)()  -- Chạy Fly khi bật
         else
-            print("Invincible OFF")
+            print("Fly OFF")
         end
     end
 })
 
--- Nút bật/tắt Tàng Hình
+-- Nút bật/tắt NoClip (Xuyên Tường)
 Section:Toggle({
-    ["Title"] = "Bật/Tắt Tàng Hình",
+    ["Title"] = "NoClip (Xuyên Tường)",
     ["Default"] = false,
     ["Callback"] = function(state)
-        _G.invisibleEnabled = state  -- Bật/tắt Tàng Hình
+        _G.noclipEnabled = state  -- Bật/tắt NoClip
         if state then
-            print("Invisible ON")
+            print("NoClip ON")
+            coroutine.wrap(NoClip)()  -- Chạy NoClip khi bật
         else
-            print("Invisible OFF")
+            print("NoClip OFF")
         end
     end
 })
 
--- Nút bật/tắt Dịch Chuyển lên cao
+-- Nút bật/tắt ESP (Vị trí người chơi)
 Section:Toggle({
-    ["Title"] = "Bật/Tắt Dịch Chuyển lên Cao",
+    ["Title"] = "ESP (Hiển thị Vị trí Người Chơi)",
     ["Default"] = false,
     ["Callback"] = function(state)
-        _G.teleportEnabled = state  -- Bật/tắt Dịch Chuyển lên cao
+        _G.espEnabled = state  -- Bật/tắt ESP
         if state then
-            print("Teleport to Sky ON")
+            print("ESP ON")
+            coroutine.wrap(ESP)()  -- Chạy ESP khi bật
         else
-            print("Teleport to Sky OFF")
+            print("ESP OFF")
         end
     end
 })
 
--- Nút bật/tắt Di chuyển vòng tròn An toàn
-Section:Toggle({
-    ["Title"] = "Bật/Tắt Di chuyển Vòng Tròn An toàn",
-    ["Default"] = false,
-    ["Callback"] = function(state)
-        _G.safeMoveEnabled = state  -- Bật/tắt chức năng di chuyển vòng tròn
-        if state then
-            print("Safe Move ON")
-            coroutine.wrap(SafeMoveInCircle)()  -- Chạy di chuyển vòng tròn khi bật
-        else
-            print("Safe Move OFF")
-        end
-    end
-})
-
--- Chạy các luồng liên tục
-coroutine.wrap(BecomeInvincible)()
-coroutine.wrap(BecomeInvisible)()
-coroutine.wrap(TeleportToSky)()
+-- Kiểm tra lại các trạng thái khi nhân vật chết hoặc reset
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    _G.autoClickEnabled = false
+    _G.flyEnabled = false
+    _G.noclipEnabled = false
+    _G.espEnabled = false
+end)
