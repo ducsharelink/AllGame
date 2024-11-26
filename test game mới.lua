@@ -10,7 +10,7 @@ local DeltaGui = DeltaLib:Start({
     ["Name Dev"] = "Minh Duc",
     ["Info Description"] = "zalo.me/0765520260",
     ["Tab Width"] = 135,
-    ["Color"] = Color3.fromRGB(127, 146, 242),
+    ["Color"] = Color3.fromRGB(0, 255, 255),
     ["CloseCallBack"] = function() end
 })
 
@@ -31,31 +31,15 @@ _G.invincibleEnabled = false
 _G.autoClickEnabled = false
 _G.noclipEnabled = false
 _G.sizeBugEnabled = false  -- Trạng thái phóng to nhân vật
-
--- Hàm tăng kích thước nhân vật (phóng to)
-local function BugSize()
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-
-    -- Thay đổi kích thước của các bộ phận cơ thể
-    while true do
-        if _G.sizeBugEnabled then
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.Size = part.Size * 100  -- Phóng to mỗi phần cơ thể
-                end
-            end
-        end
-        wait(0.5)  -- Điều chỉnh tốc độ bug kích thước
-    end
-end
+_G.invisibleEnabled = false  -- Trạng thái tàng hình
+_G.teleportEnabled = false  -- Trạng thái dịch chuyển lên cao
 
 -- Hàm bật bất tử
 local function BecomeInvincible()
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
 
-    -- Ngừng nhận sát thương
+    -- Ngừng nhận sát thương và luôn khôi phục máu
     while true do
         if _G.invincibleEnabled then
             local humanoid = character:FindFirstChildWhichIsA("Humanoid")
@@ -70,72 +54,92 @@ local function BecomeInvincible()
     end
 end
 
--- Hàm tăng tốc độ đẩy tạ nhanh
-local function FastPushUp()
+-- Hàm bật tàng hình
+local function BecomeInvisible()
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
-    
-    -- Lặp liên tục để đẩy tạ nhanh không cần đợi
+
+    -- Làm nhân vật tàng hình và tắt các phần hình ảnh
     while true do
-        if _G.pushUpEnabled then
-            -- Giả lập hành động đẩy tạ nhanh bằng cách gọi hành động trong game
-            local event = game:GetService("ReplicatedStorage"):FindFirstChild("PushUpEvent")
-            if event then
-                event:FireServer()  -- Kích hoạt hành động đẩy tạ
+        if _G.invisibleEnabled then
+            character:FindFirstChild("Head"):Destroy()  -- Ẩn đầu nhân vật
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("MeshPart") or part:IsA("Part") then
+                    part.Transparency = 1  -- Tạo tàng hình
+                    part.CanCollide = false  -- Tắt va chạm
+                end
             end
-        end
-        wait(0.01)  -- Điều chỉnh tốc độ để đẩy nhanh
-    end
-end
-
--- Hàm Auto Click sử dụng VirtualInputManager để click tự động vào màn hình
-local function AutoClick()
-    local VirtualInputManager = game:GetService("VirtualInputManager")
-
-    -- Vòng lặp auto click
-    while true do
-        if _G.autoClickEnabled then
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Nhấn chuột trái
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Thả chuột trái
-        end
-        wait(0.01)  -- Điều chỉnh tốc độ click (0.01 giây)
-    end
-end
-
--- Hàm để bật/tắt Xuyên Tường (Noclip)
-local function Noclip()
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    
-    -- Cho phép xuyên tường bằng cách tắt các collisions
-    while true do
-        if _G.noclipEnabled then
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
+        else
+            -- Khi tắt tàng hình, phục hồi lại tất cả các phần cơ thể
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("MeshPart") or part:IsA("Part") then
+                    part.Transparency = 0  -- Phục hồi độ trong suốt
+                    part.CanCollide = true  -- Bật va chạm
                 end
             end
         end
-        wait(0.1)  -- Tốc độ kiểm tra xuyên tường
+        wait(0.1)  -- Kiểm tra liên tục
     end
 end
 
--- Tạo mục "Misc" với các chức năng Fast PushUp, Invincible, Auto Click, Noclip và BugSize
+-- Hàm dịch chuyển lên cao (vị trí tít cao giữa map)
+local function TeleportToSky()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    
+    while true do
+        if _G.teleportEnabled then
+            -- Dịch chuyển lên một vị trí tít cao
+            local targetPosition = Vector3.new(0, 500, 0)  -- Dịch chuyển lên vị trí X=0, Y=500, Z=0
+            character:SetPrimaryPartCFrame(CFrame.new(targetPosition))  -- Thực hiện dịch chuyển
+        end
+        wait(0.5)  -- Kiểm tra mỗi 0.5 giây
+    end
+end
+
+-- Hàm tăng kích thước nhân vật (phóng to)
+local function BugSize()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+
+    -- Thay đổi kích thước của các bộ phận cơ thể
+    while true do
+        if _G.sizeBugEnabled then
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Size = part.Size * 200000 -- Phóng to mỗi phần cơ thể
+                end
+            end
+        end
+        wait(0.5)  -- Điều chỉnh tốc độ bug kích thước
+    end
+end
+
+-- Hàm Auto Click
+local function AutoClick()
+    while _G.autoClickEnabled do
+        game:GetService("Players").LocalPlayer:RequestStreamAroundAsync(game.Players.LocalPlayer.Character.HumanoidRootPart.Position)  -- Lệnh giả lập click
+        wait(0.01)  -- Tốc độ click nhanh
+    end
+end
+
+-- Tạo mục "Misc" với các chức năng Fast PushUp, Invincible, Auto Click, Noclip, BugSize và Invisible
 local Section = MainTab:Section({
     ["Title"] = "Misc",
-    ["Content"] = "Chức năng tăng tốc đẩy tạ, bất tử, auto click, xuyên tường và phóng to nhân vật"
+    ["Content"] = "Chức năng tăng tốc đẩy tạ, bất tử, auto click, xuyên tường, phóng to nhân vật và tàng hình"
 })
 
--- Nút bật/tắt Tăng tốc độ đẩy tạ
+-- Nút bật/tắt Auto Click
 Section:Toggle({
-    ["Title"] = "Tăng tốc đẩy tạ",
+    ["Title"] = "Auto Click Siêu Nhanh",
     ["Default"] = false,
     ["Callback"] = function(state)
-        _G.pushUpEnabled = state  -- Bật/tắt chức năng đẩy tạ nhanh
+        _G.autoClickEnabled = state  -- Bật/tắt Auto Click
         if state then
-            print("Push Up ON")
+            print("Auto Click ON")
+            coroutine.wrap(AutoClick)()  -- Chạy auto click khi bật
         else
-            print("Push Up OFF")
+            print("Auto Click OFF")
         end
     end
 })
@@ -154,30 +158,30 @@ Section:Toggle({
     end
 })
 
--- Nút bật/tắt Auto Click
+-- Nút bật/tắt Tàng Hình
 Section:Toggle({
-    ["Title"] = "Bật/Tắt Auto Click",
+    ["Title"] = "Bật/Tắt Tàng Hình",
     ["Default"] = false,
     ["Callback"] = function(state)
-        _G.autoClickEnabled = state  -- Bật/tắt Auto Click
+        _G.invisibleEnabled = state  -- Bật/tắt Tàng Hình
         if state then
-            print("Auto Click ON")
+            print("Invisible ON")
         else
-            print("Auto Click OFF")
+            print("Invisible OFF")
         end
     end
 })
 
--- Nút bật/tắt Xuyên Tường
+-- Nút bật/tắt Dịch Chuyển lên cao
 Section:Toggle({
-    ["Title"] = "Bật/Tắt Xuyên Tường",
+    ["Title"] = "Bật/Tắt Dịch Chuyển lên Cao",
     ["Default"] = false,
     ["Callback"] = function(state)
-        _G.noclipEnabled = state  -- Bật/tắt Xuyên Tường
+        _G.teleportEnabled = state  -- Bật/tắt Dịch Chuyển lên cao
         if state then
-            print("Xuyên Tường ON")
+            print("Teleport to Sky ON")
         else
-            print("Xuyên Tường OFF")
+            print("Teleport to Sky OFF")
         end
     end
 })
@@ -197,8 +201,7 @@ Section:Toggle({
 })
 
 -- Chạy các luồng chức năng chính
-coroutine.wrap(FastPushUp)()
 coroutine.wrap(BecomeInvincible)()
-coroutine.wrap(AutoClick)()
-coroutine.wrap(Noclip)()
+coroutine.wrap(BecomeInvisible)()
+coroutine.wrap(TeleportToSky)()
 coroutine.wrap(BugSize)()
