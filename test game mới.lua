@@ -30,7 +30,7 @@ _G.pushUpEnabled = false
 _G.invincibleEnabled = false
 _G.autoClickEnabled = false
 _G.noclipEnabled = false
-_G.sizeBugEnabled = false  -- Trạng thái phóng to nhân vật
+_G.safeMoveEnabled = false  -- Trạng thái di chuyển vòng tròn an toàn
 _G.invisibleEnabled = false  -- Trạng thái tàng hình
 _G.teleportEnabled = false  -- Trạng thái dịch chuyển lên cao
 
@@ -97,21 +97,24 @@ local function TeleportToSky()
     end
 end
 
--- Hàm tăng kích thước nhân vật (phóng to)
-local function BugSize()
+-- Hàm di chuyển vòng tròn (An toàn)
+local function SafeMoveInCircle()
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local radius = 10  -- Bán kính của vòng tròn di chuyển
+    local speed = 10  -- Tốc độ di chuyển
+    local angle = 0
 
-    -- Thay đổi kích thước của các bộ phận cơ thể
+    -- Di chuyển vòng tròn
     while true do
-        if _G.sizeBugEnabled then
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.Size = part.Size * 200000 -- Phóng to mỗi phần cơ thể
-                end
-            end
+        if _G.safeMoveEnabled then
+            angle = angle + speed  -- Tăng góc quay
+            local x = radius * math.cos(math.rad(angle))  -- Tính toán tọa độ X
+            local z = radius * math.sin(math.rad(angle))  -- Tính toán tọa độ Z
+            humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position.X + x, humanoidRootPart.Position.Y, humanoidRootPart.Position.Z + z)
         end
-        wait(0.5)  -- Điều chỉnh tốc độ bug kích thước
+        wait(0.1)  -- Cập nhật mỗi 0.1 giây
     end
 end
 
@@ -123,10 +126,10 @@ local function AutoClick()
     end
 end
 
--- Tạo mục "Misc" với các chức năng Fast PushUp, Invincible, Auto Click, Noclip, BugSize và Invisible
+-- Tạo mục "Misc" với các chức năng Fast PushUp, Invincible, Auto Click, Noclip, Safe Move và Invisible
 local Section = MainTab:Section({
     ["Title"] = "Misc",
-    ["Content"] = "Chức năng tăng tốc đẩy tạ, bất tử, auto click, xuyên tường, phóng to nhân vật và tàng hình"
+    ["Content"] = "Chức năng an toàn, bất tử, auto click, xuyên tường, và tàng hình"
 })
 
 -- Nút bật/tắt Auto Click
@@ -186,22 +189,22 @@ Section:Toggle({
     end
 })
 
--- Nút bật/tắt Bug Phóng To Nhân Vật
+-- Nút bật/tắt Di chuyển vòng tròn An toàn
 Section:Toggle({
-    ["Title"] = "Bug Phóng To Nhân Vật",
+    ["Title"] = "Bật/Tắt Di chuyển Vòng Tròn An toàn",
     ["Default"] = false,
     ["Callback"] = function(state)
-        _G.sizeBugEnabled = state  -- Bật/tắt chức năng phóng to nhân vật
+        _G.safeMoveEnabled = state  -- Bật/tắt chức năng di chuyển vòng tròn
         if state then
-            print("Size Bug ON")
+            print("Safe Move ON")
+            coroutine.wrap(SafeMoveInCircle)()  -- Chạy di chuyển vòng tròn khi bật
         else
-            print("Size Bug OFF")
+            print("Safe Move OFF")
         end
     end
 })
 
--- Chạy các luồng chức năng chính
+-- Chạy các luồng liên tục
 coroutine.wrap(BecomeInvincible)()
 coroutine.wrap(BecomeInvisible)()
 coroutine.wrap(TeleportToSky)()
-coroutine.wrap(BugSize)()
