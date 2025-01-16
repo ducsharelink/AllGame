@@ -1,1 +1,1 @@
-https://raw.githubusercontent.com/Duc18-code/Ducv4/refs/heads/main/dumamay
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Duc18-code/Ducv4/refs/heads/main/dumamay"))()
